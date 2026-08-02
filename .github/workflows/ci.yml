@@ -877,14 +877,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.desktop-rust == 'true'
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
-      - name: Dependency policy
+      - name: Workspace dependency policy
         run: cargo-deny check
+      - name: Desktop vulnerability policy
+        # Tauri's platform stack includes several unmaintained GTK3-era crates
+        # with no safe upgrade. Keep those visible elsewhere while making actual
+        # RustSec vulnerabilities fatal for the desktop's separate lockfile.
+        run: cargo-deny --manifest-path desktop/src-tauri/Cargo.toml check advisories -A unmaintained
 
   dead-token-guard:
     name: Dead Token Reference Guard

@@ -1,6 +1,7 @@
 name: Docker image
 
-# Builds and publishes the public Buzz relay images as ghcr.io/block/buzz.
+# Builds and publishes the public Buzz relay images to the registry selected by
+# GHCR_IMAGE (defaulting to ghcr.io/block/buzz for the upstream repository).
 # Normal tags contain stripped binaries; matching debug-* tags contain the same
 # optimized binaries with line-table debug information for native profilers.
 #

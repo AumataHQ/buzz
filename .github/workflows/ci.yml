@@ -1106,3 +1106,34 @@ jobs:
           LLAMA_STAGE_BACKEND: metal
           LLAMA_STAGE_BUILD_DIR: ${{ github.workspace }}/.cache/mesh-llama/build-stage-abi-metal
           SKIPPY_LLAMA_AUTO_BUILD: "0"
+
+  ci-required:
+    name: CI Required
+    if: ${{ always() }}
+    needs:
+      - changes
+      - rust-lint
+      - unit-tests
+      - desktop-core
+      - desktop-smoke-e2e
+      - desktop
+      - desktop-e2e-relay
+      - desktop-e2e-integration-shard
+      - desktop-e2e-integration
+      - backend-integration
+      - relay-e2e
+      - web
+      - mobile
+      - security
+      - dead-token-guard
+      - server-cross-compile
+      - windows-rust
+      - desktop-build-macos
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require every applicable CI job to pass
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          jq -e 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS_JSON"

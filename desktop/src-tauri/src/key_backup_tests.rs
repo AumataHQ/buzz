@@ -211,12 +211,15 @@ fn generated_passphrase_respects_word_count_and_separator() {
 
 #[test]
 fn generated_passphrase_clamps_word_count() {
+    // Use a separator that cannot occur inside an EFF word. The wordlist
+    // contains "yo-yo", so splitting a randomly generated phrase on '-'
+    // makes this test probabilistically report an extra word.
     // Below the floor: clamped up to MIN_PASSPHRASE_WORDS, never shorter.
-    let phrase = generate_passphrase(1, "-").unwrap();
-    assert_eq!(phrase.split('-').count(), MIN_PASSPHRASE_WORDS);
+    let phrase = generate_passphrase(1, " ").unwrap();
+    assert_eq!(phrase.split_whitespace().count(), MIN_PASSPHRASE_WORDS);
     // Above the ceiling: clamped down to MAX_PASSPHRASE_WORDS.
-    let phrase = generate_passphrase(50, "-").unwrap();
-    assert_eq!(phrase.split('-').count(), MAX_PASSPHRASE_WORDS);
+    let phrase = generate_passphrase(50, " ").unwrap();
+    assert_eq!(phrase.split_whitespace().count(), MAX_PASSPHRASE_WORDS);
 }
 
 #[test]

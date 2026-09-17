@@ -1,4 +1,5 @@
 import * as React from "react";
+import { requiredRemoteProvider } from "../lib/remoteExecutionPolicy";
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
@@ -927,6 +928,8 @@ export function AgentDefinitionDialog({
           open={isAddHarnessOpen}
         />
 
+        {isCreateMode && requiredRemoteProvider ? createRunSection : null}
+
         <div className="space-y-3">
           <button
             aria-expanded={showAdvancedFields}
@@ -965,7 +968,11 @@ export function AgentDefinitionDialog({
                 transition={advancedFieldsTransition}
               >
                 <PersonaAdvancedFields
-                  afterRespondTo={isCreateMode ? createRunSection : undefined}
+                  afterRespondTo={
+                    isCreateMode && !requiredRemoteProvider
+                      ? createRunSection
+                      : undefined
+                  }
                   behaviorDraft={behaviorDraft}
                   disabled={isPending}
                   envVars={envVars}

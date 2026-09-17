@@ -14,6 +14,7 @@ pub(super) async fn run_agent_models_command(
     persisted_model: Option<String>,
     merged_env: BTreeMap<String, String>,
 ) -> Result<AgentModelsResponse, String> {
+    crate::managed_agents::execution_policy::require_local_execution()?;
     // Clone the env map for redaction below — `merged_env` is moved
     // into the spawn_blocking closure and we still need the values to
     // scrub any user-supplied secrets that the child surfaces in stderr.

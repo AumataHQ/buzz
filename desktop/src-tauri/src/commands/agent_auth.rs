@@ -111,6 +111,7 @@ fn run_buzz_acp_auth_command<const N: usize>(
     runtime_id: &str,
     args: [&str; N],
 ) -> Result<std::process::Output, String> {
+    crate::managed_agents::execution_policy::require_local_execution()?;
     let runtime = known_acp_runtime_exact(runtime_id)
         .ok_or_else(|| format!("unknown ACP runtime: {runtime_id}"))?;
     let adapter_command = runtime

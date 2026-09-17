@@ -402,9 +402,26 @@ unauthenticated passthrough. No image-reader proxy or tenant isolation exception
 
 ## Keep this file true
 
+### GhostHalo remote-only packaging
+
+`VITE_BUZZ_REMOTE_PROVIDER` is the shared build input for the frontend run
+destination and the native execution policy. The GhostHalo packaging script sets
+it to `ghosthalo-systemd`. In that build, create defaults to that provider,
+the local option is absent, and missing provider discovery blocks submission.
+Native create also redirects legacy local create requests to the required
+provider; existing local records, auto-restore, runtime-pair starts, and local
+ACP model discovery cannot bypass the native process-launch refusal. Keep the
+policy at the native spawn boundary as well as the UI. Other custom builds
+without this packaging input retain upstream behavior.
+
 **If you change how agent configuration is modeled, rendered, persisted,
 applied, or cleared — update this file in the same PR.** A rule that no longer
 matches the code is worse than no rule; a new pattern that isn't written down
 here will be broken by the next agent that never learns it existed. Reviewers:
 treat a config-behavior diff without a matching AGENTS.md diff (or an explicit
 "no rules changed" note) as incomplete.
+
+The GhostHalo profile shows its destination outside Advanced and uses a native
+configured catalog containing Claude and Codex. It does not run local CLI auth
+probes; host authentication and adapter availability are verified by deployment
+and a real reply, not inferred from Mac executables.

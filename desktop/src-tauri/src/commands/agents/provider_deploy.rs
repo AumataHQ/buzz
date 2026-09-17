@@ -80,6 +80,7 @@ pub(crate) async fn deploy_to_provider(
             BackendKind::Provider { id, config } => (id.clone(), config.clone()),
             BackendKind::Local => return Err(format!("agent {pubkey} is not provider-backed")),
         };
+        crate::managed_agents::execution_policy::creation_backend(record.backend.clone())?;
         (
             provider_id,
             config,

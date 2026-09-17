@@ -19,6 +19,7 @@ mod definition_validation;
 mod discovery;
 pub(crate) mod effective_config;
 mod env_vars;
+pub(crate) mod execution_policy;
 pub(crate) mod git_bash;
 pub(crate) mod global_config;
 mod managed_node_paths;

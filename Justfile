@@ -241,6 +241,8 @@ desktop-tauri-test-compiled-flags: _ensure-sidecar-stubs
     #!/usr/bin/env bash
     set -euo pipefail
     cd desktop/src-tauri
+    VITE_BUZZ_REMOTE_PROVIDER=ghosthalo-systemd \
+      cargo test remote_policy_blocks_actual_process_spawn -- --ignored
     echo "=== Clean build (no flag) → expect false ==="
     env -u BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY \
       BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=false \

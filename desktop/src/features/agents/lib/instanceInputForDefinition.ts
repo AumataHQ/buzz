@@ -13,6 +13,7 @@ import {
   resolveManagedAgentAvatarUrl,
   type UploadMediaBytes,
 } from "../ui/managedAgentAvatar";
+import { defaultRemoteBackend } from "./remoteExecutionPolicy";
 
 type RuntimesQueryLike = {
   isFetched: boolean;
@@ -113,6 +114,7 @@ export async function buildInstanceInputForDefinition(
   upload?: UploadMediaBytes,
   backendIntent?: BackendIntent,
 ): Promise<CreateManagedAgentInput> {
+  backendIntent ??= defaultRemoteBackend();
   const avatarUrl = await resolveManagedAgentAvatarUrl(
     persona.avatarUrl,
     upload,

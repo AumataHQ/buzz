@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Buzz provider v1: a bounded, secret-free-on-disk SSH launch handoff."""
+import json
+import subprocess
+import sys
+
+MAX_REQUEST = 1024 * 1024
+
+
+def main():
+    raw = sys.stdin.buffer.read(MAX_REQUEST + 1)
+    if len(raw) > MAX_REQUEST:
+        raise ValueError("Provider request exceeds 1 MiB")
+    request = json.loads(raw)
+    if request.get("op") == "info":
+        return {"ok": True, "protocol_version": 1, "name": "GhostHalo",
+                "version": "1.0.0", "description": "Run agents on GhostHalo over SSH with systemd.",
+                "config_schema": {"type": "object", "properties": {}, "additionalProperties": False}}
+    if request.get("op") != "deploy" or request.get("provider_config", {}) != {}:
+        raise ValueError("GhostHalo accepts deploy with an empty provider configuration")
+    # Fixed destination and command. Payload (including credentials) travels on stdin,
+    # never in argv, environment, shell interpolation, logs, or a local staging file.
+    result = subprocess.run(
+        ["/usr/bin/ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes",
+         "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=10",
+         "-o", "ServerAliveCountMax=2", "ghosthalo",
+         "/usr/bin/python3 /home/ghost/buzz/provider/host.py"],
+        input=raw, capture_output=True, timeout=120, check=False)
+    if result.returncode:
+        # stderr can contain diagnostics from credentials or user configuration.
+        raise RuntimeError("GhostHalo deployment failed; inspect its provider service locally on GhostHalo")
+    response = json.loads(result.stdout)
+    if not response.get("ok") or not isinstance(response.get("agent_id"), str):
+        raise RuntimeError("GhostHalo did not confirm a deployment")
+    return response
+
+
+if __name__ == "__main__":
+    try:
+        print(json.dumps(main()))
+    except Exception as error:
+        # Only our own fixed diagnostics are surfaced; never echo the request or subprocess output.
+        message = str(error) if type(error) in (ValueError, RuntimeError) else "GhostHalo provider failed"
+        if isinstance(error, json.JSONDecodeError):
+            message = "Invalid provider JSON"
+        print(json.dumps({"ok": False, "error": message}))
+        sys.exit(1)

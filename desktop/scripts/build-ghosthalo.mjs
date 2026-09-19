@@ -15,7 +15,7 @@ const result = spawnSync(
     "app",
     "--config",
     JSON.stringify({
-      version: "0.5.23-ghosthalo.1",
+      version: "0.5.23-ghosthalo.2",
       plugins: { updater: { endpoints: [] } },
     }),
     ...process.argv.slice(2),

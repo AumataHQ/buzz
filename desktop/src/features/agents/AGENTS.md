@@ -422,6 +422,6 @@ treat a config-behavior diff without a matching AGENTS.md diff (or an explicit
 "no rules changed" note) as incomplete.
 
 The GhostHalo profile shows its destination outside Advanced and uses a native
-configured catalog containing Claude and Codex. It does not run local CLI auth
+configured catalog containing Claude, Codex, Gemini CLI, and Grok Build. It does not run local CLI auth
 probes; host authentication and adapter availability are verified by deployment
 and a real reply, not inferred from Mac executables.

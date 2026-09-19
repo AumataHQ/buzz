@@ -8,10 +8,12 @@ worker is started. Credentials are never placed in command arguments or local
 staging files.
 
 The host endpoint accepts only the configured GhostHalo relay and owner. It
-supports the installed Codex and Claude ACP adapters, using GhostHalo's existing
-provider authentication. Other runtimes fail explicitly and need an installed
-host adapter before support is added. The adapter executable is resolved on
-GhostHalo; Mac paths are never executed remotely.
+supports the installed Claude, Codex, Gemini CLI, and Grok Build ACP runtimes,
+using GhostHalo's existing provider authentication. Antigravity's `agy` CLI is
+validated separately because it does not expose ACP; Gemini CLI supplies the
+official Gemini ACP entrypoint. Other runtimes fail explicitly and need an
+installed host adapter before support is added. The adapter executable is
+resolved on GhostHalo; Mac paths are never executed remotely.
 
 Each identity has a stable `buzz-managed-<pubkey>.service` and a private directory
 under `/home/ghost/buzz/agents/managed/<pubkey>`. The directory and launch JSON
@@ -30,17 +32,17 @@ process; relay presence and a real reply are separate acceptance checks.
 
 1. Install `host.py` at `/home/ghost/buzz/provider/host.py` (mode 0700). The
    host needs Python 3, `cryptography`, systemd user services, the Buzz ACP
-   binary and the two adapters referenced in the script. GhostHalo already has
+   binary and the four runtimes referenced in the script. GhostHalo already has
    these dependencies. Preserve the existing relay and agent services.
 2. Install the executable `buzz-backend-ghosthalo-systemd` in the Mac's
    `~/.local/bin`. Buzz searches that directory even when launched from Finder.
 3. Activate Hermit and run `cd desktop && pnpm tauri:build:ghosthalo`. This
-   packages `0.5.23-ghosthalo.1` with `VITE_BUZZ_REMOTE_PROVIDER=ghosthalo-systemd`.
+   packages `0.5.23-ghosthalo.2` with `VITE_BUZZ_REMOTE_PROVIDER=ghosthalo-systemd`.
    The same build input selects the frontend default and native execution
    refusal. The profile does not use Block's updater feed. Unprofiled upstream
    builds keep their original behavior; install the GhostHalo build on this Mac.
 
-In this profile, GhostHalo is visible outside Advanced and the new-agent destination has no local choice. The native catalog offers the configured Claude and Codex adapters without probing Mac executables or treating local credentials as host authentication. Missing provider
+In this profile, GhostHalo is visible outside Advanced and the new-agent destination has no local choice. The native catalog offers the configured Claude, Codex, Gemini CLI, and Grok Build runtimes without probing Mac executables or treating local credentials as host authentication. Missing provider
 discovery blocks creation. Legacy create requests resolve to GhostHalo, while
 existing local records cannot launch, including through runtime-pair start and
 automatic restore. Local ACP model-discovery subprocesses are also refused;

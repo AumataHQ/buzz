@@ -51,6 +51,22 @@ class ProviderTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     host.prepare(data)
 
+    def test_configured_remote_runtimes_resolve_only_to_host_binaries(self):
+        for requested, expected, args in [
+            ("gemini", "/home/ghost/.local/bin/gemini", ["--acp"]),
+            (
+                "grok",
+                "/home/ghost/.local/bin/grok",
+                ["agent", "--always-approve", "stdio"],
+            ),
+        ]:
+            with self.subTest(requested=requested):
+                data = request()
+                data["agent"]["launch"].update(command=requested, args=args)
+                _, launch = host.prepare(data)
+                self.assertEqual(launch["env"]["BUZZ_ACP_AGENT_COMMAND"], expected)
+                self.assertEqual(launch["env"]["BUZZ_ACP_AGENT_ARGS"], ",".join(args))
+
     def test_identical_running_deploy_is_idempotent(self):
         pubkey, launch = host.prepare(request())
         with tempfile.TemporaryDirectory() as temporary:

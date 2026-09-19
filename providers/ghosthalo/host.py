@@ -16,8 +16,12 @@ HOST_SCRIPT = "/home/ghost/buzz/provider/host.py"
 RELAY = "wss://ghosthalo.tailed205b.ts.net:10443"
 OWNER = "5b80a0f34dd9f0b6fdee57c1c25d1d768e60428df664d986dc77f295392bbfcf"
 PATH = "/home/ghost/buzz/bin:/home/ghost/buzz/adapters/node_modules/.bin:/home/ghost/.local/bin:/usr/local/bin:/usr/bin:/bin"
-COMMANDS = {"codex-acp": "/home/ghost/buzz/adapters/node_modules/.bin/codex-acp",
-            "claude-agent-acp": "/home/ghost/buzz/adapters/node_modules/.bin/claude-agent-acp"}
+COMMANDS = {
+    "codex-acp": "/home/ghost/buzz/adapters/node_modules/.bin/codex-acp",
+    "claude-agent-acp": "/home/ghost/buzz/adapters/node_modules/.bin/claude-agent-acp",
+    "gemini": "/home/ghost/.local/bin/gemini",
+    "grok": "/home/ghost/.local/bin/grok",
+}
 MAX_REQUEST = 1024 * 1024
 
 
@@ -67,7 +71,9 @@ def prepare(request):
     # shell snippets, or a command supplied through environment overrides.
     command = COMMANDS.get(Path(launch.get("command", "")).name)
     if command is None:
-        raise ValueError("GhostHalo currently supports the Codex and Claude ACP adapters")
+        raise ValueError(
+            "GhostHalo currently supports the Claude, Codex, Gemini, and Grok ACP runtimes"
+        )
     args = launch.get("args", [])
     if not isinstance(args, list) or any(not isinstance(a, str) or "," in a or "\x00" in a for a in args):
         raise ValueError("Invalid ACP arguments")

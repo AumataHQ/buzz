@@ -153,6 +153,17 @@ pub(super) const PRESET_HARNESSES: &[PresetHarness] = &[
         underlying_cli_install_instructions_url: None,
     },
     PresetHarness {
+        id: "gemini",
+        label: "Gemini CLI",
+        command: "gemini",
+        args: &["--acp"],
+        install_instructions_url: "https://github.com/google-gemini/gemini-cli",
+        install_hint: "Buzz talks to Gemini CLI through its official ACP mode (gemini --acp).",
+        underlying_cli: None,
+        underlying_cli_install_hint: None,
+        underlying_cli_install_instructions_url: None,
+    },
+    PresetHarness {
         id: "grok",
         label: "Grok Build",
         command: "grok",

@@ -89,7 +89,7 @@ def prepare(request):
         raise ValueError("Remote presence cannot be disabled")
     # Identity, executable and lifecycle settings are owned by this endpoint.
     for key in list(env):
-        if key in {"NOSTR_PRIVATE_KEY", "BUZZ_AUTH_TAG", "BUZZ_ACP_SYSTEM_PROMPT_FILE",
+        if key in {"NOSTR_PRIVATE_KEY", "BUZZ_PRIVATE_KEY", "BUZZ_AUTH_TAG", "BUZZ_ACP_SYSTEM_PROMPT_FILE",
                    "BUZZ_ACP_RESPOND_TO_ALLOWLIST", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "NODE_OPTIONS"}:
             del env[key]
     mode = agent.get("respond_to", "owner-only")
@@ -105,15 +105,19 @@ def prepare(request):
     if not isinstance(tag, list) or len(tag) != 4 or tag[:2] != ["auth", OWNER]:
         raise ValueError("Invalid ownership attestation")
     env.update({"HOME": "/home/ghost", "PATH": PATH,
-                "BUZZ_RELAY_URL": RELAY, "BUZZ_PRIVATE_KEY": agent["private_key_nsec"],
+                "BUZZ_RELAY_URL": RELAY,
                 "BUZZ_AUTH_TAG": auth, "BUZZ_ACP_AGENT_OWNER": OWNER,
                 "BUZZ_ACP_AGENT_COMMAND": command, "BUZZ_ACP_AGENT_ARGS": ",".join(args),
                 "BUZZ_ACP_MCP_COMMAND": "", "BUZZ_ACP_RESPOND_TO": mode,
                 "BUZZ_ACP_ALLOWED_RESPOND_TO": mode,
                 "BUZZ_ACP_EXIT_AFTER_INACTIVITY": "14400", "BUZZ_ACP_HEARTBEAT_INTERVAL": "0"})
+    if command == COMMANDS["grok"]:
+        # Keep every GhostHalo Grok launch on the approved subscription model,
+        # even when an older desktop profile still submits grok-4.5.
+        env["BUZZ_ACP_MODEL"] = "grok-4.6"
     if mode == "allowlist":
         env["BUZZ_ACP_RESPOND_TO_ALLOWLIST"] = ",".join(allowed)
-    return pubkey, {"env": env, "name": agent.get("name", "Buzz agent")}
+    return pubkey, {"env": env, "name": agent.get("name", "Buzz agent")}, agent["private_key_nsec"]
 
 
 def write_private(path, data):
@@ -134,7 +138,7 @@ def systemctl(*args):
 
 
 def deploy(request):
-    pubkey, launch = prepare(request)
+    pubkey, launch, identity = prepare(request)
     os.umask(0o077)
     ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
     directory = ROOT / pubkey
@@ -165,6 +169,7 @@ def deploy(request):
                 "Restart=on-failure\nRestartSec=10\nTimeoutStopSec=30\nKillMode=control-group\nUMask=0077\n"
                 "[Install]\nWantedBy=default.target\n")
         write_private(directory / "launch.json", serialized)
+        write_private(directory / "identity.nsec", identity + "\n")
         write_private(unit, text)
         for args in (("daemon-reload",), ("enable", service), ("restart", service)):
             if systemctl(*args).returncode:
@@ -182,6 +187,10 @@ def run_agent(pubkey):
         raise ValueError("Invalid agent identifier")
     directory = ROOT / pubkey
     launch = json.loads((directory / "launch.json").read_text())
+    identity = (directory / "identity.nsec").read_text().strip()
+    if public_key(identity) != pubkey:
+        raise ValueError("Managed identity does not match its agent directory")
+    launch["env"]["BUZZ_PRIVATE_KEY"] = identity
     os.chdir(directory)
     # No ambient SSH/session environment or Mac credentials are inherited.
     os.execve("/home/ghost/buzz/bin/buzz-acp", ["buzz-acp"], launch["env"])

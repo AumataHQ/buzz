@@ -28,9 +28,10 @@ class ProviderTests(unittest.TestCase):
     def test_identity_and_host_authority_override_user_environment(self):
         data = request()
         data["agent"]["launch"]["env"].update(HOME="/tmp/wrong", BUZZ_PRIVATE_KEY="wrong", BUZZ_ACP_AGENT_COMMAND="sh")
-        pubkey, launch = host.prepare(data)
+        pubkey, launch, identity = host.prepare(data)
         self.assertRegex(pubkey, r"^[0-9a-f]{64}$")
-        self.assertEqual(launch["env"]["BUZZ_PRIVATE_KEY"], data["agent"]["private_key_nsec"])
+        self.assertNotIn("BUZZ_PRIVATE_KEY", launch["env"])
+        self.assertEqual(identity, data["agent"]["private_key_nsec"])
         self.assertEqual(launch["env"]["HOME"], "/home/ghost")
         self.assertEqual(launch["env"]["BUZZ_ACP_AGENT_COMMAND"], host.COMMANDS["codex-acp"])
         self.assertEqual(launch["env"]["BUZZ_ACP_MODEL"], "gpt-5")
@@ -63,12 +64,15 @@ class ProviderTests(unittest.TestCase):
             with self.subTest(requested=requested):
                 data = request()
                 data["agent"]["launch"].update(command=requested, args=args)
-                _, launch = host.prepare(data)
+                data["agent"]["launch"]["env"]["BUZZ_ACP_MODEL"] = "grok-4.5"
+                _, launch, _ = host.prepare(data)
                 self.assertEqual(launch["env"]["BUZZ_ACP_AGENT_COMMAND"], expected)
                 self.assertEqual(launch["env"]["BUZZ_ACP_AGENT_ARGS"], ",".join(args))
+                if requested == "grok":
+                    self.assertEqual(launch["env"]["BUZZ_ACP_MODEL"], "grok-4.6")
 
     def test_identical_running_deploy_is_idempotent(self):
-        pubkey, launch = host.prepare(request())
+        pubkey, launch, _ = host.prepare(request())
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             directory = root / pubkey

@@ -381,7 +381,38 @@ buzz messages send --channel <channel-id> --reply-to <thread-root-id> \
 - Rust: `definition_validation` and inbound persona tests pin the shared
   Unicode/control-character policy at local, import, publish, and sync gates.
 
+## Managed avatar media
+
+Desktop-managed profiles retain the saved persona/instance avatar as the desired
+source. Never publish another configured community's authenticated `/media/` URL
+verbatim: `relay::profile_avatar::localize_avatar` verifies/copies its bytes into
+the caller-pinned target before kind:0 comparison/publication. The shared record
+keeps the source URL, not the target projection. Transfer or kind:0 rejection
+leaves the previous profile intact so normal reconciliation can retry. The
+Agent-managed profiles opt-out still disables automatic reconciliation.
+
+The configured community origin set is refreshed through narrow workspace IPC
+before startup restore and when inactive communities change, without resetting
+active community state. After source removal, the shared writer may reuse an
+already-published target-local picture with the same original content hash;
+this is not permission to fetch the removed source. It is not learned from profile URLs. Media transfer
+uses the fixed agent signer, origin-scoped Blossom auth, no redirects, byte caps,
+and hash/descriptor verification; ordinary public external avatars remain
+unauthenticated passthrough. No image-reader proxy or tenant isolation exception.
+
 ## Keep this file true
+
+### GhostHalo remote-only packaging
+
+`VITE_BUZZ_REMOTE_PROVIDER` is the shared build input for the frontend run
+destination and the native execution policy. The GhostHalo packaging script sets
+it to `ghosthalo-systemd`. In that build, create defaults to that provider,
+the local option is absent, and missing provider discovery blocks submission.
+Native create also redirects legacy local create requests to the required
+provider; existing local records, auto-restore, runtime-pair starts, and local
+ACP model discovery cannot bypass the native process-launch refusal. Keep the
+policy at the native spawn boundary as well as the UI. Other custom builds
+without this packaging input retain upstream behavior.
 
 **If you change how agent configuration is modeled, rendered, persisted,
 applied, or cleared — update this file in the same PR.** A rule that no longer
@@ -389,3 +420,8 @@ matches the code is worse than no rule; a new pattern that isn't written down
 here will be broken by the next agent that never learns it existed. Reviewers:
 treat a config-behavior diff without a matching AGENTS.md diff (or an explicit
 "no rules changed" note) as incomplete.
+
+The GhostHalo profile shows its destination outside Advanced and uses a native
+configured catalog containing Claude, Codex, Gemini CLI, and Grok Build. It does not run local CLI auth
+probes; host authentication and adapter availability are verified by deployment
+and a real reply, not inferred from Mac executables.

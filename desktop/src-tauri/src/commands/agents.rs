@@ -340,10 +340,11 @@ pub async fn list_managed_agents(app: AppHandle) -> Result<Vec<ManagedAgentSumma
 
 #[tauri::command]
 pub async fn create_managed_agent(
-    input: CreateManagedAgentRequest,
+    mut input: CreateManagedAgentRequest,
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<CreateManagedAgentResponse, String> {
+    input.backend = crate::managed_agents::execution_policy::creation_backend(input.backend)?;
     let name = input.name.trim().to_string();
     let requested_persona_id = input
         .persona_id

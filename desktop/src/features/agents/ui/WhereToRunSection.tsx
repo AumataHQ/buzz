@@ -3,6 +3,7 @@ import * as React from "react";
 
 import { useBackendProvidersQuery } from "@/features/agents/hooks";
 import { probeBackendProvider } from "@/shared/api/tauri";
+import { requiredRemoteProvider } from "../lib/remoteExecutionPolicy";
 
 import { ProviderConfigFields } from "./ProviderConfigFields";
 import { PersonaDropdownField } from "./PersonaDropdownField";
@@ -26,11 +27,19 @@ export function WhereToRunSection({
   const [probeError, setProbeError] = React.useState<string | null>(null);
   const runOnOptions = React.useMemo(
     () => [
-      { label: "This computer", value: "local" },
-      ...backendProviders.map((provider) => ({
-        label: provider.id,
-        value: provider.id,
-      })),
+      ...(requiredRemoteProvider
+        ? []
+        : [{ label: "This computer", value: "local" }]),
+      ...backendProviders
+        .filter(
+          (provider) =>
+            !requiredRemoteProvider || provider.id === requiredRemoteProvider,
+        )
+        .map((provider) => ({
+          label:
+            provider.id === requiredRemoteProvider ? "GhostHalo" : provider.id,
+          value: provider.id,
+        })),
     ],
     [backendProviders],
   );
@@ -83,6 +92,13 @@ export function WhereToRunSection({
     };
   }, [selectedBinaryPath, draft.probedProvider]);
 
+  if (requiredRemoteProvider && !selectedBackendProvider) {
+    return (
+      <p role="alert">
+        GhostHalo launch provider is unavailable. Local execution is disabled.
+      </p>
+    );
+  }
   if (backendProviders.length === 0) return null;
 
   return (

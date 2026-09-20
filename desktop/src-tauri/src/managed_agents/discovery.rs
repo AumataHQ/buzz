@@ -1,3 +1,5 @@
+mod remote_catalog;
+use remote_catalog::remote_catalog;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
@@ -1096,6 +1098,9 @@ pub fn discover_acp_runtimes_from(
     custom_harnesses_dir: Option<&Path>,
     force: bool,
 ) -> Vec<AcpRuntimeCatalogEntry> {
+    if super::execution_policy::remote_provider().is_some() {
+        return remote_catalog();
+    }
     // Cheap path is cache-only (no login-shell spawn); forced path resolves live.
     let resolve = if force {
         resolve_command

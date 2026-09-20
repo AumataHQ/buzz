@@ -1,6 +1,7 @@
 import type { BackendIntent } from "../lib/instanceInputForDefinition";
 import type { BackendProviderProbeResult } from "@/shared/api/types";
 import { coerceConfigValues } from "./ProviderConfigFields";
+import { requiredRemoteProvider } from "../lib/remoteExecutionPolicy";
 
 /** Draft state of the optional remote-backend selector. */
 export type WhereToRunDraft = {
@@ -10,7 +11,7 @@ export type WhereToRunDraft = {
 };
 
 export const emptyWhereToRunDraft: WhereToRunDraft = {
-  runOn: "local",
+  runOn: requiredRemoteProvider ?? "local",
   providerConfig: {},
   probedProvider: null,
 };
@@ -45,6 +46,8 @@ export function applyProbeResult(
 }
 
 export function providerConfigComplete(draft: WhereToRunDraft): boolean {
+  if (requiredRemoteProvider && draft.runOn !== requiredRemoteProvider)
+    return false;
   if (draft.runOn === "local") return true;
   if (!draft.probedProvider) return false;
   const schema = draft.probedProvider.config_schema as

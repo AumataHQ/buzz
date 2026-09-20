@@ -1244,3 +1244,19 @@ fn make_pair_runtime_placeholder() -> crate::managed_agents::ManagedAgentPairRun
     };
     crate::managed_agents::ManagedAgentPairRuntime::starting(process)
 }
+#[test]
+#[ignore = "run with the GhostHalo packaging policy enabled"]
+fn remote_policy_blocks_actual_process_spawn() {
+    assert!(crate::managed_agents::execution_policy::remote_provider().is_some());
+    let catalog = crate::managed_agents::discover_acp_runtimes_from(None, true);
+    assert_eq!(catalog.len(), 2);
+    assert!(catalog
+        .iter()
+        .all(|entry| matches!(entry.id.as_str(), "claude" | "codex") && !entry.can_auto_install));
+    let mut command = std::process::Command::new("this-program-must-never-be-resolved");
+    let result = super::spawn_with_effort_proof(&mut command, super::EffortApplied(()));
+    let error = result.expect_err("remote-only build must refuse before process creation");
+    assert!(error
+        .to_string()
+        .contains("Local agent execution is disabled"));
+}

@@ -8,6 +8,18 @@ include!("src/managed_agents/reserved_env_keys.rs");
 use base64::Engine as _;
 
 fn main() {
+    println!("cargo:rerun-if-env-changed=VITE_BUZZ_REMOTE_PROVIDER");
+    if let Ok(provider) = std::env::var("VITE_BUZZ_REMOTE_PROVIDER") {
+        assert!(
+            !provider.is_empty()
+                && provider.bytes().all(|b| b.is_ascii_lowercase()
+                    || b.is_ascii_digit()
+                    || b == b'-'
+                    || b == b'_'),
+            "VITE_BUZZ_REMOTE_PROVIDER must name a provider, not a path"
+        );
+        println!("cargo:rustc-env=BUZZ_DESKTOP_REMOTE_PROVIDER={provider}");
+    }
     println!("cargo:rerun-if-env-changed=BUZZ_RELAY_URL");
     println!("cargo:rerun-if-env-changed=BUZZ_RELAY_HTTP");
     println!("cargo:rerun-if-env-changed=BUZZ_UPDATER_PUBLIC_KEY");

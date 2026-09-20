@@ -429,6 +429,7 @@ pub(crate) fn spawn_with_effort_proof(
     cmd: &mut std::process::Command,
     _effort: EffortApplied,
 ) -> std::io::Result<std::process::Child> {
+    super::execution_policy::require_local_execution().map_err(std::io::Error::other)?;
     cmd.spawn()
 }
 
@@ -452,6 +453,7 @@ pub fn spawn_agent_child(
     owner_hex: Option<&str>,
     replay_floor_unix: Option<u64>,
 ) -> Result<crate::managed_agents::ManagedAgentProcess, String> {
+    super::execution_policy::require_local_execution()?;
     if let Some(error) = spawn_key_refusal(record) {
         return Err(error);
     }
